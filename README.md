@@ -1,4 +1,4 @@
-# paper-orchestra
+# PaperOrchestra
 
 A pluggable skill pack that lets **any coding agent** in Claude Code, Cursor,
 Antigravity, Cline, Aider, OpenCode, etc. which can run the
