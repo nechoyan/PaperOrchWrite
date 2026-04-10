@@ -53,15 +53,48 @@ finally caption.
    conceptual entities the figure needs. For `experimental_log.md`, the
    `## 2. Raw Numeric Data` section contains markdown tables.
 
-4. **Render**: write a small matplotlib script and execute it via your Bash
-   tool. The script must:
+4. **Render**: choose a backend based on availability.
+
+   #### Option A — PaperBanana (optional, recommended for diagrams)
+
+   [PaperBanana](https://github.com/dwzhu-pku/PaperBanana) is the backbone
+   the PaperOrchestra paper actually uses (§4 Step 2). It runs a
+   Retriever → Planner → Stylist → Visualizer → Critic loop that produces
+   high-quality diagrams grounded in real paper examples. **Especially good
+   for `plot_type == "diagram"` (Figure-1-style overviews).**
+
+   Check availability before starting the pipeline:
+   ```bash
+   python skills/plotting-agent/scripts/paperbanana_render.py --check-backend
+   # exit 0 → available; exit 2 → not configured, use Option B
+   ```
+
+   If available, call it per figure:
+   ```bash
+   python skills/plotting-agent/scripts/paperbanana_render.py \
+       --figure-id <figure_id> \
+       --caption   "<objective from figure spec>" \
+       --content-file workspace/inputs/idea.md \   # or experimental_log.md
+       --task      <diagram|plot> \
+       --aspect-ratio <aspect_ratio> \
+       --out       workspace/figures/<figure_id>.png
+   # exit 0 → PNG saved; exit 2 → fall back to Option B
+   ```
+
+   See `references/paperbanana-cookbook.md` for setup, env vars, cost notes,
+   and attribution.
+
+   #### Option B — matplotlib (built-in fallback)
+
+   Write a matplotlib script and execute it via your Bash tool. The script
+   must:
    - Apply the global academic style from `chart-patterns.md`.
    - Use the pixel dimensions for the requested aspect ratio (look up in
      `references/aspect-ratios.md`).
    - Save to `workspace/figures/<figure_id>.png` at 300 DPI.
    - Call `plt.close()` after `savefig`.
 
-   Alternatively, call the bundled helper:
+   Or use the bundled helper directly:
    ```bash
    python skills/plotting-agent/scripts/render_matplotlib.py \
        --spec spec.json \
@@ -101,7 +134,10 @@ finally caption.
 
 ## Conceptual diagrams
 
-For `plot_type == "diagram"`, follow `references/diagram-patterns.md`.
+For `plot_type == "diagram"`, try PaperBanana first (Option A above) — its
+Retriever finds reference diagrams from real published papers, giving the
+Planner strong visual examples to ground style and layout decisions.  If
+PaperBanana is unavailable, follow `references/diagram-patterns.md`.
 Patterns include block diagrams, system overviews, flowcharts, and
 algorithm-as-graph. The bundled helper:
 
@@ -148,5 +184,7 @@ have no pre-existing counterpart.
 - `references/chart-patterns.md` — matplotlib style + chart type recipes
 - `references/diagram-patterns.md` — conceptual diagram recipes
 - `references/aspect-ratios.md` — pixel targets for each of the 12 allowed ratios at 300 DPI
-- `scripts/render_matplotlib.py` — render a JSON plot spec → PNG
-- `scripts/render_diagram.py` — render a JSON diagram spec → PNG
+- `references/paperbanana-cookbook.md` — **NEW** PaperBanana setup, usage, cost notes, attribution
+- `scripts/render_matplotlib.py` — render a JSON plot spec → PNG (matplotlib fallback)
+- `scripts/render_diagram.py` — render a JSON diagram spec → PNG (matplotlib fallback)
+- `scripts/paperbanana_render.py` — **NEW** PaperBanana backbone wrapper (reads `PAPERBANANA_PATH` from env)

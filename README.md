@@ -113,6 +113,39 @@ web search tool.  Two optional integrations improve throughput or coverage:
   See `skills/literature-review-agent/references/s2-api-cookbook.md` for
   endpoint details, field reference, and error-handling notes.
 
+- **[PaperBanana](https://github.com/dwzhu-pku/PaperBanana)** — the
+  figure-generation backbone the PaperOrchestra paper actually uses (§4
+  Step 2, Figure 1 caption: "This figure was generated using PaperBanana").
+  It runs a Retriever → Planner → Stylist → Visualizer → Critic multi-agent
+  loop that grounds diagram style in real paper examples.  The bundled
+  `scripts/paperbanana_render.py` wrapper converts the plotting-agent's
+  figure spec to PaperBanana's input format, runs the pipeline, and saves a
+  300-DPI PNG.  It is **opt-in** and falls back to the matplotlib renderer
+  (exit code 2) if `PAPERBANANA_PATH` is unset.  Especially recommended for
+  `plot_type == "diagram"` figures.
+
+  ```bash
+  git clone https://github.com/dwzhu-pku/PaperBanana
+  cd PaperBanana && uv pip install -r requirements.txt
+  cp configs/model_config.template.yaml configs/model_config.yaml
+  # fill in google_api_key or openrouter_api_key in model_config.yaml
+  export PAPERBANANA_PATH="/path/to/PaperBanana"
+
+  # verify setup
+  python skills/plotting-agent/scripts/paperbanana_render.py --check-backend
+
+  # render one diagram figure
+  python skills/plotting-agent/scripts/paperbanana_render.py \
+      --figure-id fig_overview \
+      --caption   "Figure 1: Overview of our proposed framework." \
+      --content-file workspace/inputs/idea.md \
+      --task diagram --aspect-ratio 16:9 \
+      --out workspace/figures/fig_overview.png
+  ```
+
+  See `skills/plotting-agent/references/paperbanana-cookbook.md` for the
+  full recipe, pipeline modes, cost notes, and attribution.
+
 - **[Exa](https://exa.ai)** — research-paper-focused search engine. The
   literature-review-agent can use it as a Phase 1 candidate-discovery
   backend via `skills/literature-review-agent/scripts/exa_search.py`. Set
