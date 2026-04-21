@@ -1,8 +1,10 @@
 # Host Integration Guide
 
 How to run the paper-orchestra skill pack under different coding agents.
-**No API keys are required for any of these.** Each host uses its own native
-tools (LLM, web search, fetch, bash, file I/O) to execute the skills.
+**No required API keys are needed for the default workflow.** Each host uses its own native
+tools (LLM, web search, fetch, bash, file I/O) to execute the skills. Optional
+helpers such as Semantic Scholar auth, Exa, and PaperBanana can be layered on top
+when you want more throughput or higher-quality figures.
 
 ## What the host needs to provide
 
@@ -62,13 +64,11 @@ a TODO marker if Intro/Related Work cannot be cited.
 
 ## Cursor
 
-1. Drop the skill markdown files into `.cursor/rules/`:
-   ```bash
-   mkdir -p .cursor/rules
-   cp -r ~/paper-orchestra/skills/*/SKILL.md .cursor/rules/
-   ```
-2. Use `@SKILL.md` references in your prompts, or just paste the trigger
-   phrase: "Run paper-orchestra on this workspace."
+1. `setup.sh` installs symlinked skill directories under `.cursor/skills/`.
+   If you prefer Cursor rules, you can still mirror the top-level `SKILL.md`
+   files into `.cursor/rules/`, but keep the full `skills/` tree available for
+   `references/` and `scripts/`.
+2. Use the trigger phrase: "Run paper-orchestra on this workspace."
 3. Cursor's web search (`@web`) handles Step 3 candidate discovery. Its
    browser tool fetches `api.semanticscholar.org` URLs.
 4. Cursor's parallel agents (Agent panel) run Steps 2 and 3 concurrently when
@@ -78,13 +78,17 @@ a TODO marker if Intro/Related Work cannot be cited.
 
 ## Google Antigravity
 
-1. Antigravity has a worker pool. Configure two workers to run the plotting
+1. `setup.sh` installs a generic mirror under `.agents/skills/` and a global
+   Gemini/Antigravity mirror under `~/.gemini/antigravity/skills/`.
+2. If your Antigravity build expects another skill directory, symlink the same
+   skill folders there.
+3. Antigravity has a worker pool. Configure two workers to run the plotting
    and literature review steps in parallel.
-2. Each worker reads the corresponding `SKILL.md` from
+4. Each worker reads the corresponding `SKILL.md` from
    `~/paper-orchestra/skills/`.
-3. Antigravity's built-in search and fetch tools handle Step 3 networking;
+5. Antigravity's built-in search and fetch tools handle Step 3 networking;
    no API key configuration needed.
-4. Final compile via Antigravity's shell runner.
+6. Final compile via Antigravity's shell runner.
 
 ---
 
@@ -153,40 +157,30 @@ on macOS). If compilation fails with `File '*.sty' not found`:
 The Literature Review Agent may generate citation keys in its own format (e.g.,
 `lewis2020rag`) while `bibtex_format.py` generates canonical keys from author +
 year + first title word (e.g., `lewis2020retrievalaugmented`). Running
-`bibtex_format.py` after the Lit Review Agent will update the keys in the pool,
-but the already-written `intro_relwork.tex` and `refs.bib` will still use the
-old keys, causing citation coverage gate failures.
+`bibtex_format.py` after the Lit Review Agent updates the keys in the pool, so
+`intro_relwork.tex` must be synchronized before the Section Writing Agent runs.
 
-**Fix**: after running `bibtex_format.py --pool ... --out ...`, run a key
-substitution pass over `intro_relwork.tex`:
+**Fix**: use the bundled helper rather than a manual script:
 
-```python
-import json
-with open('workspace/citation_pool.json') as f:
-    pool = json.load(f)
-key_map = {p['key']: p['bibtex_key'] for p in pool['papers']}
-with open('workspace/drafts/intro_relwork.tex') as f:
-    content = f.read()
-for old, new in key_map.items():
-    content = content.replace('{' + old + '}', '{' + new + '}')
-with open('workspace/drafts/intro_relwork.tex', 'w') as f:
-    f.write(content)
+```bash
+python skills/literature-review-agent/scripts/sync_keys.py \
+    --pool workspace/citation_pool.json \
+    --tex workspace/drafts/intro_relwork.tex \
+    --inplace
 ```
-
-Then rebuild `refs.bib` from the pool's `bibtex_key` fields before running
-the Section Writing Agent.
 
 ### authors format in citation_pool.json
 
 If the Literature Review Agent writes authors as plain strings
 (`"authors": ["Alice Smith", "Bob Jones"]`), but `bibtex_format.py` expects
-dicts (`{"name": "Alice Smith"}`), bibtex_format.py will raise `AttributeError`.
-Fix by running a normalisation pass before `bibtex_format.py`:
+dicts (`{"name": "Alice Smith"}`), the pool should be normalized before
+BibTeX generation.
 
-```python
-for p in pool['papers']:
-    if p.get('authors') and isinstance(p['authors'][0], str):
-        p['authors'] = [{'name': a} for a in p['authors']]
+**Fix**: use the built-in validator/normalizer:
+
+```bash
+python skills/literature-review-agent/scripts/validate_pool.py \
+    --pool workspace/citation_pool.json --fix
 ```
 
 ---

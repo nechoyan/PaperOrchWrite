@@ -1,12 +1,26 @@
 # Coding Agent Integration
 
-Per-host setup for the paper-orchestra skill pack. **No API keys are
-required for any host.** Each host uses its own native LLM, web search,
-fetch, bash, and file tools.
+Per-host setup for the paper-orchestra skill pack. **No required API keys are
+needed for the default workflow.** Each host uses its own native LLM, web search,
+fetch, bash, and file tools. Optional helpers such as Semantic Scholar auth,
+Exa, and PaperBanana can be enabled through `.env` when you want more throughput
+or higher-quality diagrams.
 
 For a higher-level overview see
 `skills/paper-orchestra/references/host-integration.md`. This document is
 the longer how-to.
+
+## Recommended first step
+
+From the repo root, run:
+
+```bash
+bash setup.sh
+```
+
+That seeds `.env` from `.env.example`, writes `~/.paperorchestra/config`, and
+symlinks the skills into several common host directories. You can still do the
+manual per-host setup below if you want tighter control.
 
 ## Capability matrix
 
@@ -90,18 +104,19 @@ git clone https://github.com/<you>/paper-orchestra ~/paper-orchestra
 cd ~/paper-orchestra
 pip install -r requirements.txt
 
-# Cursor uses .cursor/rules/ in your project for skill files
-mkdir -p .cursor/rules
+# setup.sh installs symlinked skill directories here
+mkdir -p .cursor/skills
 for s in paper-orchestra outline-agent plotting-agent literature-review-agent \
          section-writing-agent content-refinement-agent paper-writing-bench \
-         paper-autoraters; do
-  cp ~/paper-orchestra/skills/$s/SKILL.md .cursor/rules/$s.md
+         paper-autoraters agent-research-aggregator; do
+  ln -sf ~/paper-orchestra/skills/$s .cursor/skills/$s
 done
 ```
 
 ### Run
 
-In Cursor's chat panel, with the `.cursor/rules/` files loaded, type:
+In Cursor's chat panel, with the `skills/` tree available (for example via
+`.cursor/skills/` from `setup.sh`), type:
 
 > Run the paper-orchestra pipeline on `./workspace`. Use `@web` for web search.
 
@@ -110,9 +125,9 @@ for the literature-review search step.
 
 ### Notes
 
-- For cross-skill `references/` files, you'll need to either copy the
-  entire `skills/` tree into your project or symlink it. SKILL.md alone
-  is not sufficient because it points to `references/prompt.md`.
+- If your Cursor workflow prefers `.cursor/rules/`, you can still copy the
+  top-level `SKILL.md` files there — but keep the full `skills/` tree available,
+  because the skill files reference `references/` and `scripts/`.
 - Cursor's parallel agents (Agent panel) handle Steps 2 ∥ 3 if you split
   them into two tasks.
 
@@ -120,16 +135,18 @@ for the literature-review search step.
 
 ### Install
 
-Antigravity stores skill packs in `~/.antigravity/skills/` (check the
-current docs for the exact path; this is typical):
+`setup.sh` installs a generic project-local mirror under `.agents/skills/` and a
+Gemini/Antigravity global mirror under `~/.gemini/antigravity/skills/`. If your
+Antigravity build expects another skill directory, symlink the same skill
+folders there as well.
 
 ```bash
 git clone https://github.com/<you>/paper-orchestra ~/paper-orchestra
-mkdir -p ~/.antigravity/skills
+mkdir -p ~/.gemini/antigravity/skills
 for s in paper-orchestra outline-agent plotting-agent literature-review-agent \
          section-writing-agent content-refinement-agent paper-writing-bench \
-         paper-autoraters; do
-  ln -sf ~/paper-orchestra/skills/$s ~/.antigravity/skills/$s
+         paper-autoraters agent-research-aggregator; do
+  ln -sf ~/paper-orchestra/skills/$s ~/.gemini/antigravity/skills/$s
 done
 ```
 

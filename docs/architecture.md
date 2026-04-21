@@ -1,7 +1,7 @@
 # Architecture
 
-A deep-dive on how the seven skills compose to implement the
-PaperOrchestra pipeline (arXiv:2604.05018) without any embedded API
+A deep-dive on how the eight core skills (plus the optional aggregator) compose to implement the
+PaperOrchestra pipeline (arXiv:2604.05018) without any embedded LLM
 clients.
 
 ## The core idea
@@ -41,7 +41,7 @@ tools to execute them.
 └────────────────────────────────────────────────────────────┘
 ```
 
-## Why no API keys
+## Why no required LLM API keys
 
 The PaperOrchestra paper uses Gemini-3.1-Pro and Semantic Scholar via
 Google Cloud Vertex AI. A faithful re-implementation could ship an
@@ -52,8 +52,9 @@ for three reasons:
    the user to configure another provider is friction. Letting the agent
    reuse its existing capabilities means the same skill pack works under
    any host.
-2. **Security.** No API keys means no secret management, no `.env` files
-   to leak, no rate-limit bookkeeping.
+2. **Security.** The default workflow avoids secrets entirely. Optional
+   integrations can still be enabled through environment variables when
+   users want higher throughput or external tooling.
 3. **Honesty.** The deterministic parts (Levenshtein matching, dedup,
    citation gates, BibTeX formatting, JSON validation) are trivially
    replicated, never wrong, and don't depend on a model. The

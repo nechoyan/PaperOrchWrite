@@ -28,7 +28,7 @@ The paper defines a five-agent pipeline
   
 that substantially outperforms single-agent and tree-search baselines on the `PaperWritingBench` benchmark (50–68% absolute win margin on literature review quality; 14–38% on overall quality). The paper ships the exact prompts for every agent in Appendix F.
 
-This repo turns those prompts, schemas, halt rules, and verification pipelines into a set of **host-agent-executable skills**. There are **no API keys**, no SDK dependencies, no embedded LLM calls. The skills are instruction documents plus deterministic helpers; your coding agent does all LLM reasoning and web search using its own tools.
+This repo turns those prompts, schemas, halt rules, and verification pipelines into a set of **host-agent-executable skills**. There are **no required LLM SDK dependencies** and **no embedded LLM calls**. The skills are instruction documents plus deterministic helpers; your coding agent does all LLM reasoning and web search using its own tools. Optional API-backed helpers exist for Semantic Scholar, Exa, and PaperBanana, but the base workflow does not require them.
 
 <p align="center">
 <img width="640" height="413" alt="image" src="https://github.com/user-attachments/assets/073630c8-9790-4b38-b8c4-184cec6eee06" />
@@ -48,11 +48,11 @@ Each skill is:
 Everything else (LLM reasoning, web search, Semantic Scholar lookups, LaTeX compilation) is **delegated to the host agent** by instruction. See [`skills/paper-orchestra/references/host-integration.md`](skills/paper-orchestra/references/host-integration.md) for per-host invocation (Claude Code, Cursor, Antigravity, Cline, Aider).
 
 
-## The seven skills
+## The eight core skills
 
 | Skill | Paper step | # LLM calls | Role |
 |---|---|---|---|
-| `paper-orchestra` | orchestrator | — | Top-level driver. Coordinates the other six. |
+| `paper-orchestra` | orchestrator | — | Top-level driver. Coordinates the other seven. |
 | `outline-agent` | Step 1 | 1 | Idea + log + template + guidelines → structured outline JSON (plotting plan, lit review plan, section plan). |
 | `plotting-agent` | Step 2 | ~20–30 | Execute plotting plan; render plots & conceptual diagrams; optional VLM-critique refinement loop; caption everything. |
 | `literature-review-agent` | Step 3 | ~20–30 | Web-search candidates; Semantic Scholar verify (Levenshtein > 70, cutoff, dedup); draft Intro + Related Work with ≥90% citation integration. |
@@ -235,7 +235,21 @@ cd ~/paper-orchestra
 pip install -r requirements.txt   # deterministic helpers only
 ```
 
-Then symlink the skills you want into your host's skill directory:
+Then choose one of the two setup paths:
+
+### Option A — quick setup script
+
+```bash
+bash setup.sh
+```
+
+This creates `.env` from `.env.example`, writes `~/.paperorchestra/config`, and
+symlinks the skills into several common host-agent directories.
+
+### Option B — manual symlinks
+
+If you prefer to manage host directories yourself, symlink the skills you want
+into your host's skill directory:
 
 ```bash
 # Claude Code
@@ -259,8 +273,7 @@ For Cursor / Antigravity / Cline / Aider, see `skills/paper-orchestra/references
 
 ## Optional integrations
 
-The pipeline requires **zero API keys to run** under any host with a native
-web search tool.  Two optional integrations improve throughput or coverage:
+The pipeline requires **no required API keys** when your host already provides web search and URL fetch. Optional integrations improve throughput, retrieval quality, or figure quality:
 
 - **[Semantic Scholar API key](https://api.semanticscholar.org/)** — Phase 2
   (citation verification) uses the public unauthenticated Semantic Scholar
@@ -377,7 +390,7 @@ A ready-to-run toy case lives at `examples/minimal/`.
 ```
 paper-orchestra/
 ├── README.md, LICENSE, CITATION.cff, requirements.txt
-├── skills/                  # 7 skills + orchestrator
+├── skills/                  # 8 core skills + optional aggregator
 ├── examples/minimal/        # toy end-to-end example
 └── docs/
     ├── architecture.md      # deep-dive on the pipeline

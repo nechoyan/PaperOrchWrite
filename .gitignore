@@ -32,8 +32,15 @@ Thumbs.db
 # Secrets — never commit API keys
 .env
 .env.*
+!.env.example
 *.env
 secrets.json
 .secrets/
 EXA_API_KEY*
 brain/
+
+# Host-agent local state created by setup.sh
+.claude/
+.cursor/
+.windsurf/
+.agents/

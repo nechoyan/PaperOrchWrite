@@ -1,6 +1,6 @@
-# Deterministic helpers only. No LLM SDKs. No network clients.
-# All web search, LLM calls, and Semantic Scholar fetches are delegated to the
-# host coding agent — this repo ships zero API integrations.
+# Deterministic helpers and optional local integrations only. No embedded LLM SDKs.
+# All LLM calls are delegated to the host coding agent. Network-backed helper
+# scripts (for example Semantic Scholar / Exa) are opt-in rather than required.
 
 jsonschema>=4.0        # outline schema validation
 python-Levenshtein>=0.21  # fuzzy title match for citation verification
