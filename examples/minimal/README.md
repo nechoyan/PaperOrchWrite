@@ -42,8 +42,12 @@ python ~/paper-orchestra/skills/paper-orchestra/scripts/init_workspace.py \
 # 2. Copy the example inputs
 cp -r ~/paper-orchestra/examples/minimal/inputs/* /tmp/po-minimal/inputs/
 
-# 3. Validate
+# 3. Validate + inspect progress
 python ~/paper-orchestra/skills/paper-orchestra/scripts/validate_inputs.py \
+    --workspace /tmp/po-minimal/
+python ~/paper-orchestra/skills/paper-orchestra/scripts/workspace_status.py \
+    --workspace /tmp/po-minimal/
+python ~/paper-orchestra/skills/paper-orchestra/scripts/build_agent_handoffs.py \
     --workspace /tmp/po-minimal/
 
 # 4. Ask Claude:

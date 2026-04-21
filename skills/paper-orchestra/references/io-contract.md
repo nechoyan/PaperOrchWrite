@@ -13,6 +13,14 @@ workspace/
 │   ├── template.tex                     # T — conference LaTeX template
 │   ├── conference_guidelines.md         # G — formatting rules, page limit, sections
 │   └── figures/                         # F — optional pre-existing figures (PNG/PDF)
+├── briefs/                              # Deterministic handoff packs for parallel agents
+│   ├── 00-workspace-summary.md
+│   ├── 01-outline-agent.md
+│   ├── 02-plotting-agent.md
+│   ├── 03-literature-review-agent.md
+│   ├── 04-section-writing-agent.md
+│   ├── 05-content-refinement-agent.md
+│   └── handoff_manifest.json
 ├── outline.json                         # Step 1 output
 ├── figures/                             # Step 2 output (generated)
 │   ├── <figure_id>.png

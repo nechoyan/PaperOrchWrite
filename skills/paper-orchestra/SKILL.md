@@ -68,6 +68,8 @@ it for fidelity *and* to keep generated papers grounded in the user's inputs.
 ```bash
 python skills/paper-orchestra/scripts/init_workspace.py --out workspace/
 python skills/paper-orchestra/scripts/validate_inputs.py --workspace workspace/
+python skills/paper-orchestra/scripts/workspace_status.py --workspace workspace/
+python skills/paper-orchestra/scripts/build_agent_handoffs.py --workspace workspace/
 ```
 
 **Before failing on missing inputs**, check whether aggregation can supply them:
@@ -91,6 +93,16 @@ The Section Writing Agent reads `tex_profile.json` to decide which LaTeX
 patterns to use (e.g., `Figure~\ref{}` vs `\cref{}`, whether to include
 `\usepackage{microtype}`, etc.). This eliminates compile-time package
 failures that previously required iterative manual edits.
+
+**Before and after each major step**, refresh the deterministic handoffs:
+
+```bash
+python skills/paper-orchestra/scripts/workspace_status.py --workspace workspace/
+python skills/paper-orchestra/scripts/build_agent_handoffs.py --workspace workspace/
+```
+
+This keeps `workspace/briefs/` current so parallel sub-agents can load a
+compact step-specific brief instead of rescanning the whole workspace.
 
 ### 1. Outline (Step 1 — 1 LLM call)
 
@@ -237,4 +249,6 @@ Code, Cursor, Antigravity, Cline, Aider, OpenCode).
 - `references/host-integration.md` — per-host invocation guide
 - `scripts/init_workspace.py` — scaffold workspace dir tree
 - `scripts/validate_inputs.py` — verify (I, E, T, G) before running
+- `scripts/workspace_status.py` — summarize progress + next recommended action
+- `scripts/build_agent_handoffs.py` — emit compact per-step briefs under `workspace/briefs/`
 - `scripts/anti_leakage_check.py` — grep draft for leaked author names/emails/affils

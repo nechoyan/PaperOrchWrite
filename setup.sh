@@ -27,11 +27,6 @@ if [ ! -d "$SKILLS_DIR" ]; then
   exit 1
 fi
 
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "ERROR: setup.sh requires python3 to update .env and write ~/.paperorchestra/config" >&2
-  exit 1
-fi
-
 # Symlink every skill in SKILLS_DIR into TARGET_DIR.
 # Skips real directories to avoid data loss; updates stale symlinks.
 install_skills() {
@@ -68,40 +63,38 @@ ensure_env_file() {
 }
 
 read_env_val() {
-  python3 - "$ENV_FILE" "$1" <<'PY'
-import pathlib, sys
-path = pathlib.Path(sys.argv[1])
-key = sys.argv[2]
-if not path.exists():
-    print("")
-    raise SystemExit(0)
-for line in path.read_text().splitlines():
-    if line.startswith(f"{key}="):
-        print(line.split("=", 1)[1])
-        raise SystemExit(0)
-print("")
-PY
+  local var_name="$1"
+  awk -F= -v key="$var_name" '
+    $1 == key {
+      sub($1 "=", "")
+      print
+      found = 1
+      exit
+    }
+    END {
+      if (!found) print ""
+    }
+  ' "$ENV_FILE" 2>/dev/null || true
 }
 
 write_env_val() {
-  python3 - "$ENV_FILE" "$1" "$2" <<'PY'
-import pathlib, sys
-path = pathlib.Path(sys.argv[1])
-key = sys.argv[2]
-value = sys.argv[3]
-lines = path.read_text().splitlines() if path.exists() else []
-out = []
-replaced = False
-for line in lines:
-    if line.startswith(f"{key}="):
-        out.append(f"{key}={value}")
-        replaced = True
-    else:
-        out.append(line)
-if not replaced:
-    out.append(f"{key}={value}")
-path.write_text("\n".join(out).rstrip("\n") + "\n")
-PY
+  local var_name="$1"
+  local value="$2"
+  local tmp_file
+  tmp_file="$(mktemp)"
+  awk -F= -v key="$var_name" -v value="$value" '
+    BEGIN { written = 0 }
+    $1 == key {
+      print key "=" value
+      written = 1
+      next
+    }
+    { print }
+    END {
+      if (!written) print key "=" value
+    }
+  ' "$ENV_FILE" > "$tmp_file"
+  mv "$tmp_file" "$ENV_FILE"
 }
 
 prompt_env_var() {
@@ -112,6 +105,11 @@ prompt_env_var() {
 
   if [ -n "$current_val" ] && [ "$current_val" != "your_key_here" ]; then
     echo "✅  $var_name already set"
+    return
+  fi
+
+  if [ ! -t 0 ]; then
+    echo "  → Skipped $var_name (non-interactive stdin)"
     return
   fi
 

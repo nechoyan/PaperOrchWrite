@@ -21,6 +21,7 @@ WORKSPACE_DIRS = [
     "refinement",
     "final",
     "cache",          # S2 verification cache (s2_cache.json written here)
+    "briefs",         # generated per-step handoff files for multi-agent resume flows
 ]
 
 INPUTS_README = textwrap.dedent("""\
@@ -71,6 +72,10 @@ def main() -> int:
     print("Next: drop your idea.md, experimental_log.md, template.tex, and")
     print("conference_guidelines.md into the inputs/ subdirectory, then run:")
     print(f"  python {os.path.dirname(__file__)}/validate_inputs.py --workspace {out}")
+    print("Once inputs validate, generate a quick progress snapshot with:")
+    print(f"  python {os.path.dirname(__file__)}/workspace_status.py --workspace {out}")
+    print("And create per-step handoffs for parallel agents with:")
+    print(f"  python {os.path.dirname(__file__)}/build_agent_handoffs.py --workspace {out}")
     return 0
 
 

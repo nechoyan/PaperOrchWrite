@@ -345,7 +345,11 @@ python skills/paper-orchestra/scripts/init_workspace.py --out workspace/
 #    (idea.md, experimental_log.md, template.tex, conference_guidelines.md;
 #     optional pre-existing figures go in workspace/inputs/figures/)
 
-# 3. ask your coding agent:
+# 3. inspect progress + generate per-step handoffs
+python skills/paper-orchestra/scripts/workspace_status.py --workspace workspace/
+python skills/paper-orchestra/scripts/build_agent_handoffs.py --workspace workspace/
+
+# 4. ask your coding agent:
 #    "Run the paper-orchestra pipeline on ./workspace"
 ```
 
@@ -384,6 +388,20 @@ python skills/agent-research-aggregator/scripts/discover_logs.py \
 > `workspace/inputs/experimental_log.md` already exist, it is skipped entirely.
 
 A ready-to-run toy case lives at `examples/minimal/`.
+
+### Fast multi-agent resume helpers
+
+To keep parallel agents fast, generate deterministic summaries after validation
+and after each major pipeline step:
+
+```bash
+python skills/paper-orchestra/scripts/workspace_status.py --workspace workspace/
+python skills/paper-orchestra/scripts/build_agent_handoffs.py --workspace workspace/
+```
+
+This populates `workspace/briefs/` with concise handoff files such as
+`02-plotting-agent.md` and `04-section-writing-agent.md`, so each agent can read
+just the files it needs instead of rescanning the entire workspace.
 
 ## Repo layout
 
